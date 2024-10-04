@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   title: Bank Argent API documentation
   description: Contains all available API endpoints in this codebase
-  version: '1.0.0'
+  version: '1.0.1'
   termsOfService: 'http://swagger.io/terms/'
 host: localhost:3001
 basePath: /api/v1
@@ -110,6 +110,139 @@ paths:
           description: Invalid Fields
         '500':
           description: Internal Server Error
+  /user/accounts:
+    post:
+      security:
+        - Bearer: []
+      tags:
+        - User Account Module
+      summary: Get user accounts
+      description: API for fetching all accounts linked to the user, including their id, balance, and type
+      parameters:
+        - in: header
+          name: Authorization
+          description: Attach Bearer JWT token
+          required: true
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: User accounts retrieved successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Account'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /user/transactions/{accountTypeId}:
+    post:
+      security:
+        - Bearer: []
+      tags:
+        - User Transaction Module
+      summary: Get transactions for a specific account type
+      description: API for fetching user transactions for a specific account type
+      parameters:
+        - in: header
+          name: Authorization
+          description: Attach Bearer JWT token
+          required: true
+        - in: path
+          name: accountTypeId
+          description: ID of the account type to fetch transactions for
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Transactions retrieved successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Transaction'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /user/transactions/{transactionId}/category:
+    put:
+      security:
+        - Bearer: []
+      tags:
+        - User Transaction Module
+      summary: Update transaction category
+      description: API for updating the category of a user's transaction
+      parameters:
+        - in: header
+          name: Authorization
+          description: Attach Bearer JWT token
+          required: true
+        - in: path
+          name: transactionId
+          description: ID of the transaction to update
+          required: true
+          type: string
+        - in: body
+          name: body
+          description: New category ID
+          required: true
+          schema:
+            type: object
+            properties:
+              categoryId:
+                type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Transaction category updated successfully
+          schema:
+            $ref: '#/definitions/ApiResponse'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /user/transactions/{transactionId}/notes:
+    put:
+      security:
+        - Bearer: []
+      tags:
+        - User Transaction Module
+      summary: Update transaction notes
+      description: API for adding or updating notes for a user's transaction
+      parameters:
+        - in: header
+          name: Authorization
+          description: Attach Bearer JWT token
+          required: true
+        - in: path
+          name: transactionId
+          description: ID of the transaction to update
+          required: true
+          type: string
+        - in: body
+          name: body
+          description: New notes
+          required: true
+          schema:
+            type: object
+            properties:
+              notes:
+                type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Transaction notes updated successfully
+          schema:
+            $ref: '#/definitions/ApiResponse'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
 securityDefinitions:
   Bearer:
     type: apiKey
@@ -117,50 +250,114 @@ securityDefinitions:
     in: header
 definitions:
   User:
+    type: object
     properties:
+      id:
+        type: string
+        description: Unique identifier for the user
       email:
         type: string
-        description: user email
-      password:
-        type: string
-        description: user password
+        description: User's email address
       firstName:
         type: string
-        description: user first name
+        description: User's first name
       lastName:
         type: string
-        description: user last name
-  Login:
+        description: User's last name
+
+  Account:
+    type: object
     properties:
-      email:
+      id:
         type: string
-        description: user email
-      password:
+        description: Unique identifier for the account
+      userId:
         type: string
-        description: user password
+        description: ID of the user who owns this account
+      balance:
+        type: number
+        description: Current balance of the account
+      accountType:
+        $ref: '#/definitions/AccountType'
+
+  AccountType:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Unique identifier for the account type
+      name:
+        type: string
+        description: Name of the account type (e.g., "Checking", "Savings")
+
+  Transaction:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Unique identifier for the transaction
+      accountId:
+        type: string
+        description: ID of the account associated with this transaction
+      date:
+        type: string
+        format: date-time
+        description: Date and time of the transaction
+      description:
+        type: string
+        description: Description of the transaction
+      amount:
+        type: number
+        description: Amount of the transaction
+      balanceAfterTransaction:
+        type: number
+        description: Account balance after this transaction
+      transactionType:
+        $ref: '#/definitions/TransactionType'
+      category:
+        $ref: '#/definitions/Category'
+      notes:
+        type: string
+        description: Additional notes for the transaction
+
+  TransactionType:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Unique identifier for the transaction type
+      name:
+        type: string
+        description: Name of the transaction type (e.g., "Debit", "Credit")
+
+  Category:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Unique identifier for the category
+      name:
+        type: string
+        description: Name of the category
+
   ApiResponse:
     type: object
     properties:
       status:
         type: integer
+        description: HTTP status code
       message:
         type: string
-      body:
+        description: Response message
+      data:
         type: object
-        properties:
-          id:
-            type: string
-          email:
-            type: string
+        description: Additional response data (if any)
+
   LoginResponse:
     type: object
     properties:
       token:
         type: string
-  UserProfile:
-    type: object
-    properties:
-      firstName:
-        type: string
-      lastName:
-        type: string
+        description: JWT token for authenticated user
+      user:
+        $ref: '#/definitions/User'
