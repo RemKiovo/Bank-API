@@ -112,12 +112,12 @@ paths:
           description: Invalid Fields
         '500':
           description: Internal Server Error
-  /user/accounts:
+  /accounts:
     post:
       security:
         - Bearer: []
       tags:
-        - User Account Module
+        - Account Module
       summary: Get user accounts
       description: API for fetching all accounts linked to the user, including their id, balance, and type
       parameters:
@@ -139,12 +139,12 @@ paths:
           description: Unauthorized
         '500':
           description: Internal Server Error
-  /user/transactions/{accountTypeId}:
+  /account/{accountId}/transactions:
     post:
       security:
         - Bearer: []
       tags:
-        - User Transaction Module
+        - Account Module
       summary: Get transactions for a specific account type
       description: API for fetching user transactions for a specific account type
       parameters:
@@ -154,8 +154,8 @@ paths:
           description: Attach Bearer JWT token
           required: true
         - in: path
-          name: accountTypeId
-          description: ID of the account type to fetch transactions for
+          name: accountId
+          description: ID of the account to fetch transactions for
           required: true
           type: string
       produces:
@@ -171,12 +171,40 @@ paths:
           description: Unauthorized
         '500':
           description: Internal Server Error
-  /user/transactions/{transactionId}/category:
+  /transactions/category:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Transaction Module
+      summary: Get the list of categories
+      description: API for getting the list of transaction's categories
+      parameters:
+        - in: header
+          type: string
+          name: Authorization
+          description: Attach Bearer JWT token
+          required: true
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Retrieved categories successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Category'
+
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /transactions/{transactionId}/category:
     put:
       security:
         - Bearer: []
       tags:
-        - User Transaction Module
+        - Transaction Module
       summary: Update transaction category
       description: API for updating the category of a user's transaction
       parameters:
@@ -206,16 +234,18 @@ paths:
           description: Transaction category updated successfully
           schema:
             $ref: '#/definitions/ApiResponse'
+        '400':
+          description: Invalid Fields
         '401':
           description: Unauthorized
         '500':
           description: Internal Server Error
-  /user/transactions/{transactionId}/notes:
+  /transactions/{transactionId}/notes:
     put:
       security:
         - Bearer: []
       tags:
-        - User Transaction Module
+        - Transaction Module
       summary: Update transaction notes
       description: API for adding or updating notes for a user's transaction
       parameters:
@@ -276,6 +306,7 @@ definitions:
     properties:
       id:
         type: string
+        format: uuid
         description: Unique identifier for the account
       userId:
         type: string
@@ -290,17 +321,21 @@ definitions:
     type: object
     properties:
       id:
-        type: string
-        description: Unique identifier for the account type
+        type: integer
+        description: Auto incrementing identifier for the account type
       name:
         type: string
         description: Name of the account type (e.g., "Checking", "Savings")
+      label:
+        type: string
+        description: Label of the balance (e.g., "Current", "Available")
 
   Transaction:
     type: object
     properties:
       id:
         type: string
+        format: uuid
         description: Unique identifier for the transaction
       accountId:
         type: string
@@ -330,8 +365,8 @@ definitions:
     type: object
     properties:
       id:
-        type: string
-        description: Unique identifier for the transaction type
+        type: integer
+        description: Auto incrementing identifier for the transaction type
       name:
         type: string
         description: Name of the transaction type (e.g., "Debit", "Credit")
@@ -340,8 +375,8 @@ definitions:
     type: object
     properties:
       id:
-        type: string
-        description: Unique identifier for the category
+        type: integer
+        description: Auto incrementing identifier for the category
       name:
         type: string
         description: Name of the category
